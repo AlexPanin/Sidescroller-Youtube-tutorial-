@@ -12,7 +12,10 @@ public class PlayerPhysics : MonoBehaviour
 
 	private float skin = .005f;
 
+	[HideInInspector]
 	public bool grounded;
+	[HideInInspector]
+	public bool movementStopped;
 
 	Ray ray;
 	RaycastHit hit;
@@ -30,9 +33,8 @@ public class PlayerPhysics : MonoBehaviour
 		float deltaX = moveAmount.x;
 		Vector2 position = transform.position;
 
+		// Check collisions above and below
 		grounded = false;
-
-		// Raycasting for bottom and top collision checks
 		for (int i = 0; i < 3; i++)
 		{
 			float dir = Mathf.Sign(deltaY);
@@ -41,18 +43,44 @@ public class PlayerPhysics : MonoBehaviour
 
 			ray = new Ray(new Vector2(x, y), new Vector2(0, dir));
 			Debug.DrawRay(ray.origin, ray.direction);
-			if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaY), collisionMask))
+			if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaY) + skin, collisionMask))
 			{
 				// Get distance between player and ground
 				float distance = Vector3.Distance (ray.origin, hit.point);
 
 				// Stop player's downward movement after comming within skin width of a collider
 				if(distance > skin)
-					deltaY = -distance + skin;
+					deltaY = distance * dir - skin * dir;
 				else
 					deltaY = 0;
 
 				grounded = true;
+				break;
+			}
+		}
+
+		// Check collisions left and right
+		movementStopped = false;
+		for (int i = 0; i < 3; i++)
+		{
+			float dir = Mathf.Sign(deltaX);
+			float x = position.x + center.x + size.x/2 * dir;	// Left, center and then rightmost point of collider
+			float y = position.y + center.y - size.y/2 + size.y/2 * i;				// Bottom of collider
+			
+			ray = new Ray(new Vector2(x, y), new Vector2(dir, 0));
+			Debug.DrawRay(ray.origin, ray.direction);
+			if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaX) + skin, collisionMask))
+			{
+				// Get distance between player and ground
+				float distance = Vector3.Distance (ray.origin, hit.point);
+				
+				// Stop player's downward movement after comming within skin width of a collider
+				if(distance > skin)
+					deltaX = distance * dir - skin * dir;
+				else
+					deltaX = 0;
+
+				movementStopped = true;
 				break;
 			}
 		}
