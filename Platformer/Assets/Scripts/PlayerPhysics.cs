@@ -23,6 +23,8 @@ public class PlayerPhysics : MonoBehaviour
 	public bool grounded;
 	[HideInInspector]
 	public bool movementStopped;
+	[HideInInspector]
+	public bool canWallHold;
 
 	Ray ray;
 	RaycastHit hit;
@@ -37,7 +39,7 @@ public class PlayerPhysics : MonoBehaviour
 		SetCollider(originalSize, originalCenter);
 	}
 
-	public void Move(Vector2 moveAmount)
+	public void Move(Vector2 moveAmount, float moveDirX)
 	{
 		float deltaY = moveAmount.y;
 		float deltaX = moveAmount.x;
@@ -48,18 +50,18 @@ public class PlayerPhysics : MonoBehaviour
 		for (int i = 0; i < collisionDivisionX; i++)
 		{
 			float dir = Mathf.Sign(deltaY);
-			float x = (position.x + c.x - s.x/2) + s.x/(collisionDivisionX - 1) * i;	// Left, center and then rightmost point of collider
-			float y = position.y + c.y + s.y/2 * dir;				// Bottom of collider
+			float x = (position.x + c.x - s.x / 2) + s.x / (collisionDivisionX - 1) * i;	// Left, center and then rightmost point of collider
+			float y = position.y + c.y + s.y / 2 * dir;										// Bottom of collider
 
 			ray = new Ray(new Vector2(x, y), new Vector2(0, dir));
 			Debug.DrawRay(ray.origin, ray.direction);
 			if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaY) + skin, collisionMask))
 			{
 				// Get distance between player and ground
-				float distance = Vector3.Distance (ray.origin, hit.point);
+				float distance = Vector3.Distance(ray.origin, hit.point);
 
 				// Stop player's downward movement after comming within skin width of a collider
-				if(distance > skin)
+				if (distance > skin)
 					deltaY = distance * dir - skin * dir;
 				else
 					deltaY = 0;
@@ -71,27 +73,38 @@ public class PlayerPhysics : MonoBehaviour
 
 		// Check collisions left and right
 		movementStopped = false;
-		for (int i = 0; i < collisionDivisionY; i++)
-		{
-			float dir = Mathf.Sign(deltaX);
-			float x = position.x + c.x + s.x/2 * dir;	// Left, center and then rightmost point of collider
-			float y = position.y + c.y - s.y/2 + s.y/(collisionDivisionY - 1) * i;				// Bottom of collider
-			
-			ray = new Ray(new Vector2(x, y), new Vector2(dir, 0));
-			Debug.DrawRay(ray.origin, ray.direction);
-			if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaX) + skin, collisionMask))
-			{
-				// Get distance between player and ground
-				float distance = Vector3.Distance (ray.origin, hit.point);
-				
-				// Stop player's downward movement after comming within skin width of a collider
-				if(distance > skin)
-					deltaX = distance * dir - skin * dir;
-				else
-					deltaX = 0;
+		canWallHold = false;
 
-				movementStopped = true;
-				break;
+		if (deltaX != 0)
+		{
+			for (int i = 0; i < collisionDivisionY; i++)
+			{
+				float dir = Mathf.Sign(deltaX);
+				float x = position.x + c.x + s.x / 2 * dir;									// Left, center and then rightmost point of collider
+				float y = position.y + c.y - s.y / 2 + s.y / (collisionDivisionY - 1) * i;	// Bottom of collider
+			
+				ray = new Ray(new Vector2(x, y), new Vector2(dir, 0));
+				Debug.DrawRay(ray.origin, ray.direction);
+				if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaX) + skin, collisionMask))
+				{
+					if(hit.collider.tag == "Wall Jump")
+					{
+						if(Mathf.Sign(deltaX) == Mathf.Sign(moveDirX) && moveDirX != 0);
+						canWallHold = true;
+					}
+
+					// Get distance between player and ground
+					float distance = Vector3.Distance(ray.origin, hit.point);
+				
+					// Stop player's downward movement after comming within skin width of a collider
+					if (distance > skin)
+						deltaX = distance * dir - skin * dir;
+					else
+						deltaX = 0;
+
+					movementStopped = true;
+					break;
+				}
 			}
 		}
 
