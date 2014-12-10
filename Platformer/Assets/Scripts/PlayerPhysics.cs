@@ -123,4 +123,9 @@ public class PlayerPhysics : MonoBehaviour
 		s = size * colliderScale;
 		c = center * colliderScale;
 	}
+
+	public void ResetCollider()
+	{
+		SetCollider(originalSize, originalCenter);
+	}
 }
