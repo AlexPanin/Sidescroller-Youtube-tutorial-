@@ -19,5 +19,6 @@ public class Entity : MonoBehaviour
 		Ragdoll r = (Instantiate(ragdoll, transform.position, transform.rotation) as GameObject).GetComponent<Ragdoll>();
 		r.CopyPose(transform);
 		Destroy(this.gameObject);
+		Destroy(r.gameObject, 10);
 	}
 }

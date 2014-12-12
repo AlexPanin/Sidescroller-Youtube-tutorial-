@@ -26,6 +26,10 @@ public class PlayerPhysics : MonoBehaviour
 	[HideInInspector]
 	public bool canWallHold;
 
+	private Transform platform;
+	private Vector3 platformPositionOld;
+	private Vector3 deltaPlatformPos;
+
 	Ray ray;
 	RaycastHit hit;
 
@@ -45,6 +49,12 @@ public class PlayerPhysics : MonoBehaviour
 		float deltaX = moveAmount.x;
 		Vector2 position = transform.position;
 
+		if(platform)
+			deltaPlatformPos = platform.position - platformPositionOld;
+		else
+			deltaPlatformPos = Vector3.zero;
+
+		#region Vertical Collisions
 		// Check collisions above and below
 		grounded = false;
 		for (int i = 0; i < collisionDivisionX; i++)
@@ -57,6 +67,9 @@ public class PlayerPhysics : MonoBehaviour
 			Debug.DrawRay(ray.origin, ray.direction);
 			if (Physics.Raycast(ray, out hit, Mathf.Abs(deltaY) + skin, collisionMask))
 			{
+				platform = hit.transform;
+				platformPositionOld = platform.position;
+
 				// Get distance between player and ground
 				float distance = Vector3.Distance(ray.origin, hit.point);
 
@@ -69,8 +82,12 @@ public class PlayerPhysics : MonoBehaviour
 				grounded = true;
 				break;
 			}
+			else
+				platform = null;
 		}
+		#endregion
 
+		#region Horizontal Collisions
 		// Check collisions left and right
 		movementStopped = false;
 		canWallHold = false;
@@ -107,6 +124,7 @@ public class PlayerPhysics : MonoBehaviour
 				}
 			}
 		}
+		#endregion
 
 		// Check collisions in the direction of movement
 		if (!grounded && !movementStopped)
@@ -123,7 +141,7 @@ public class PlayerPhysics : MonoBehaviour
 			}
 		}
 
-		Vector2 finalTransform = new Vector2(deltaX, deltaY);
+		Vector2 finalTransform = new Vector2(deltaX + deltaPlatformPos.x, deltaY);
 
 		transform.Translate(finalTransform, Space.World);
 	}
