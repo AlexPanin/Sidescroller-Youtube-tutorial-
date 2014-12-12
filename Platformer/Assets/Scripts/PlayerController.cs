@@ -29,12 +29,13 @@ public class PlayerController : Entity
 	// Components
 	private PlayerPhysics playerPhysics;
 	private Animator animator;
+	private GameManager manager;
 
     void Start()
     {
 		playerPhysics = GetComponent<PlayerPhysics>();
 		animator = GetComponent<Animator>();
-
+		manager = Camera.main.GetComponent<GameManager>();
 		animator.SetLayerWeight(1,1);
     }
 
@@ -160,6 +161,19 @@ public class PlayerController : Entity
 
 
     }
+
+	void OnTriggerEnter(Collider c)
+	{
+		if(c.tag == "Checkpoint")
+		{
+			manager.SetCheckpoint(c.transform.position);
+		}
+
+		if(c.tag == "Finish")
+		{
+			manager.EndLevel();
+		}
+	}
 
 	// Increment speed towards target by acceleration
 	private float IncrementTowards(float s, float target, float acceleration)

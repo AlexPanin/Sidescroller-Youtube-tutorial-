@@ -4,11 +4,12 @@ using System.Collections;
 public class GameCamera : MonoBehaviour
 {
 	private Transform target;
-	private float trackSpeed = 10;
+	private float trackSpeed = 12;
 
 	public void SetTarget(Transform t)
 	{
 		target = t;
+		transform.position = new Vector3(t.position.x, t.position.y, transform.position.z);
 	}
 
 	void LateUpdate()
